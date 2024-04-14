@@ -1,9 +1,8 @@
 """
 @author: Maziar Raissi
 """
-
 import sys
-sys.path.insert(0, '../../Utilities/')
+sys.path.insert(0, '/Users/dkmathlu/Documents/GitHub/PINNs/Utilities/')
 
 import tensorflow as tf
 import numpy as np

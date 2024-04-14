@@ -8,6 +8,7 @@ Created on Mon Oct  9 20:11:57 2017
 
 import numpy as np
 import matplotlib as mpl
+
 #mpl.use('pgf')
 
 def figsize(scale, nplots = 1):
@@ -32,11 +33,8 @@ pgf_with_latex = {                      # setup matplotlib to use latex for outp
     "xtick.labelsize": 8,
     "ytick.labelsize": 8,
     "figure.figsize": figsize(1.0),     # default fig size of 0.9 textwidth
-    "pgf.preamble": [
-        r"\usepackage[utf8x]{inputenc}",    # use utf8 fonts becasue your computer can handle it :)
-        r"\usepackage[T1]{fontenc}",        # plots will be generated using this preamble
-        ]
-    }
+    "pgf.preamble": r"\usepackage[utf8x]{inputenc} \usepackage[T1]{fontenc}"
+}
 mpl.rcParams.update(pgf_with_latex)
 
 import matplotlib.pyplot as plt
