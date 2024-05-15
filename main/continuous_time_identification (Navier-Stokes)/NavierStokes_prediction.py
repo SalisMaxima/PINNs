@@ -85,6 +85,8 @@ if predict:
     lambda_1_value = model.lambda_1.item()
     lambda_2_value = model.lambda_2.item()
 
+    print(lambda_1_value, lambda_2_value)
+
     error_lambda_1 = abs(lambda_1_value - 1.0) * 100
     error_lambda_2 = abs(lambda_2_value - 0.01) / 0.01 * 100
 
@@ -93,3 +95,21 @@ if predict:
     print(f'Error p: {error_p:e}')
     print(f'Error lambda_1: {error_lambda_1:e}')
     print(f'Error lambda_2: {error_lambda_2:e}')
+
+
+    # save the results
+    np.savetxt('u_pred.txt', u_pred.cpu().numpy())
+    np.savetxt('v_pred.txt', v_pred.cpu().numpy())
+    np.savetxt('p_pred.txt', p_pred.cpu().numpy())
+    np.savetxt('f_u_pred.txt', f_u_pred.cpu().numpy())
+    np.savetxt('f_v_pred.txt', f_v_pred.cpu().numpy())
+    np.savetxt('error_u.txt', np.array([error_u.cpu().numpy()]))
+    np.savetxt('error_v.txt', np.array([error_v.cpu().numpy()]))
+    np.savetxt('error_p.txt', np.array([error_p.cpu().numpy()]))
+    np.savetxt('error_lambda_1.txt', np.array([error_lambda_1]))
+    np.savetxt('error_lambda_2.txt', np.array([error_lambda_2]))
+    # also the lambda values
+    np.savetxt('lambda_1.txt', np.array([lambda_1_value]))
+    np.savetxt('lambda_2.txt', np.array([lambda_2_value]))
+
+    print('Results saved')

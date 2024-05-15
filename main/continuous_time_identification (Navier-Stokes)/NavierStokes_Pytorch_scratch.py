@@ -152,5 +152,5 @@ if __name__ == "__main__":
     print(f"Training time: {end_time - start_time} seconds")
     
     # Save the model
-    torch.save(model.state_dict(), "model.pth")
+    torch.save(model.state_dict(), "model2.pth")
     print("Model saved successfully!")
