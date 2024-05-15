@@ -13,36 +13,29 @@ torch.manual_seed(1234)
 
 # Define the PhysicsInformedNN class to encapsulate the neural network for solving PDEs
 class PhysicsInformedNN(torch.nn.Module):
-    def __init__(self, layers):
+    def __init__(self, layers, activation='tanh'):
         super(PhysicsInformedNN, self).__init__()
-        # Device for model
+        self.model = nn.Sequential()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
-        # Building the sequential model directly in the constructor
-        self.model = nn.Sequential()
-        
-        # Loop through the list of layers and add them to the model
+        activation_function = nn.Tanh() if activation == 'tanh' else nn.ReLU()
+
         for i in range(len(layers)-1):
             self.model.add_module(f"linear_{i}", nn.Linear(layers[i], layers[i+1]))
-            # Add tanh activation after each linear layer except the last layer
-            if i < len(layers) - 2:  # No activation after the last layer
-                self.model.add_module(f"tanh_{i}", nn.Tanh())
+            if i < len(layers) - 2:
+                self.model.add_module(f"{activation}_{i}", activation_function)
         
-        # Place the whole model on the correct device
-        self.model = self.model.to(self.device)
-        
-        # Parameters for the PDE, defined on the device
-        self.lambda_1 = nn.Parameter(torch.tensor([0.0], device=self.device, requires_grad=True))
-        self.lambda_2 = nn.Parameter(torch.tensor([0.0], device=self.device, requires_grad=True))
-
+        self.model.to(self.device)
+        self.lambda_1 = nn.Parameter(torch.tensor([0.0], device=self.device))
+        self.lambda_2 = nn.Parameter(torch.tensor([0.0], device=self.device))
     # Define the forward pass of the neural network
     def forward(self, x, y, t):
         # Ensure inputs are on the correct device
-        cat_input = torch.cat([x.to(self.device), y.to(self.device), t.to(self.device)], dim=1)
+        cat_input = torch.cat([x, y, t], dim=1)
         output = self.model(cat_input)
         
-        psi = output[:, 0:1] # Extract the first output as the stream function
-        p = output[:, 1:2] # Extract the second output as the pressure field
+        psi = output[:, 0:1] # Extract the first output as the stream function and ensure it has gradient enabled
+        p = output[:, 1:2] # Extract the second output as the pressure field and ensure it has gradient enabled
         
         u = grad(psi.sum(), y, create_graph=True)[0] # Compute the u velocity component using automatic differentiation
         v = -grad(psi.sum(), x, create_graph=True)[0] # Compute the v velocity component using automatic differentiation
@@ -73,7 +66,8 @@ class PhysicsInformedNN(torch.nn.Module):
         mse_v = torch.mean((v_true - v_pred) ** 2)
         mse_f_u = torch.mean(f_u_pred ** 2)
         mse_f_v = torch.mean(f_v_pred ** 2)
-        return mse_u + mse_v + mse_f_u + mse_f_v
+        total_loss = mse_u + mse_v + mse_f_u + mse_f_v
+        return total_loss
 
 
 # Main execution logic to setup the model and start training
@@ -89,32 +83,32 @@ if __name__ == "__main__":
     # Extract and process data
     U_star = torch.tensor(data['U_star'], dtype=torch.float32).to(device)
     # print the size of U_star in bytes
-    print(U_star.element_size() * U_star.nelement())
+    #print(U_star.element_size() * U_star.nelement())
     # print the size of U_star in GB
-    print(U_star.element_size() * U_star.nelement() / 1024**3)
+    #print(U_star.element_size() * U_star.nelement() / 1024**3)
     P_star = torch.tensor(data['p_star'], dtype=torch.float32).to(device)
     # print the size of p_star in bytes
-    print(P_star.element_size() * P_star.nelement())
+    #print(P_star.element_size() * P_star.nelement())
     # print the size of p_star in GB
-    print(P_star.element_size() * P_star.nelement() / 1024**3)
+    #print(P_star.element_size() * P_star.nelement() / 1024**3)
     t_star = torch.tensor(data['t'], dtype=torch.float32).to(device)
     # print the size of t_star in bytes
-    print(t_star.element_size() * t_star.nelement())
+    #print(t_star.element_size() * t_star.nelement())
     # print the size of t_star in GB
-    print(t_star.element_size() * t_star.nelement() / 1024**3)
+    #print(t_star.element_size() * t_star.nelement() / 1024**3)
     X_star = torch.tensor(data['X_star'], dtype=torch.float32).to(device)
     # print the size of X_star in bytes
-    print(X_star.element_size() * X_star.nelement())
+    #print(X_star.element_size() * X_star.nelement())
     # print the size of X_star in GB
-    print(X_star.element_size() * X_star.nelement() / 1024**3)
+    #print(X_star.element_size() * X_star.nelement() / 1024**3)
     
     # Flatten and prepare data
     N = X_star.shape[0]
     T = t_star.shape[0]
-    XX = X_star[:, 0:1].repeat(1, T)
-    YY = X_star[:, 1:2].repeat(1, T)
-    TT = t_star.repeat(N, 1)
-    
+    XX = X_star[:, 0:1].repeat(1, T) # dimensions are N x T
+    YY = X_star[:, 1:2].repeat(1, T) # dimensions are N x T
+    TT = t_star.repeat(1,N).T # dimensions are N x T
+
     x = XX.flatten()[:, None]
     y = YY.flatten()[:, None]
     t = TT.flatten()[:, None]
@@ -122,35 +116,30 @@ if __name__ == "__main__":
     v = U_star[:, 1, :].flatten()[:, None]
     
     model = PhysicsInformedNN(layers).to(device)
-
-    print(model)
-    # print the size of the model in GB
-    print(sum(p.element_size() * p.nelement() for p in model.parameters()) / 1024**3)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     
     # Train the model
-    
     N_train = 5000
     idx = np.random.choice(N * T, N_train, replace=False)
-    x_train = x[idx, :]
-    y_train = y[idx, :]
-    t_train = t[idx, :]
-    u_train = u[idx, :]
-    v_train = v[idx, :]
+    x_train = x[idx, :].requires_grad_(True)
+    y_train = y[idx, :].requires_grad_(True)
+    t_train = t[idx, :].requires_grad_(True)
+    u_train = u[idx, :].requires_grad_(True)
+    v_train = v[idx, :].requires_grad_(True)
     
     # Convert the training data to PyTorch tensors with gradients enabled
-    x_train = torch.tensor(x_train, dtype=torch.float32, requires_grad=True).to(device)
-    y_train = torch.tensor(y_train, dtype=torch.float32, requires_grad=True).to(device)
-    t_train = torch.tensor(t_train, dtype=torch.float32, requires_grad=True).to(device)
-    u_train = torch.tensor(u_train, dtype=torch.float32, requires_grad=True).to(device)
-    v_train = torch.tensor(v_train, dtype=torch.float32, requires_grad=True).to(device)
+    #x_train = torch.tensor(x_train, dtype=torch.float32, requires_grad=True).to(device)
+    #y_train = torch.tensor(y_train, dtype=torch.float32, requires_grad=True).to(device)
+    #t_train = torch.tensor(t_train, dtype=torch.float32, requires_grad=True).to(device)
+    #u_train = torch.tensor(u_train, dtype=torch.float32, requires_grad=True).to(device)
+    #v_train = torch.tensor(v_train, dtype=torch.float32, requires_grad=True).to(device)
     
     
     
     training_data = [(x_train, y_train, t_train, u_train, v_train)]
     start_time = time.time()
     model.train()
-    for epoch in range(1000):
+    for epoch in range(200000):
         for x, y, t, u, v in training_data:
             optimizer.zero_grad()
             u_pred, v_pred, p_pred, f_u_pred, f_v_pred = model(x, y, t)
@@ -164,48 +153,4 @@ if __name__ == "__main__":
     
     # Save the model
     torch.save(model.state_dict(), "model.pth")
-
-
-    # Prediction (optional)
-    predict = True
-    if predict == True:
-        # Assuming model and data loading setup has already been done
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        # Define the snapshot number to visualize
-        snap = 100
-        
-        # Convert data to tensors and ensure they are on the correct device
-        x_star = torch.tensor(X_star[:,0:1], dtype=torch.float32, device=device)
-        y_star = torch.tensor(X_star[:,1:2], dtype=torch.float32, device=device)
-        t_star = torch.tensor(TT[:,snap], dtype=torch.float32, device=device)
-
-        u_star = torch.tensor(U_star[:,0,snap], dtype=torch.float32, device=device)
-        v_star = torch.tensor(U_star[:,1,snap], dtype=torch.float32, device=device)
-        p_star = torch.tensor(P_star[:,snap], dtype=torch.float32, device=device)
-
-        # Prediction using the model's forward method
-        model.eval()  # Set the model to evaluation mode
-        with torch.no_grad():
-            u_pred, v_pred, p_pred, f_u_pred, f_v_pred = model(x_star, y_star, t_star)
-
-        # Compute errors
-        error_u = torch.linalg.norm(u_star - u_pred) / torch.linalg.norm(u_star)
-        error_v = torch.linalg.norm(v_star - v_pred) / torch.linalg.norm(v_star)
-        error_p = torch.linalg.norm(p_star - p_pred) / torch.linalg.norm(p_star)
-
-        # Retrieve parameters directly since they are now attributes of the model
-        lambda_1_value = model.lambda_1.item()
-        lambda_2_value = model.lambda_2.item()
-
-        # Calculate parameter errors
-        error_lambda_1 = abs(lambda_1_value - 1.0) * 100
-        error_lambda_2 = abs(lambda_2_value - 0.01) / 0.01 * 100
-
-        # Print errors
-        print(f'Error u: {error_u:e}')
-        print(f'Error v: {error_v:e}')
-        print(f'Error p: {error_p:e}')
-        print(f'Error l1: {error_lambda_1:.5f}%')
-        print(f'Error l2: {error_lambda_2:.5f}%')
-
-    
+    print("Model saved successfully!")
