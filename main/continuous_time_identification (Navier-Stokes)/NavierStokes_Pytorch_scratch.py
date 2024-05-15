@@ -78,6 +78,10 @@ class PhysicsInformedNN(torch.nn.Module):
 
 # Main execution logic to setup the model and start training
 if __name__ == "__main__":
+    if torch.cuda.is_available():
+        print("CUDA is available! Testing with a simple tensor operation.")
+        # wait for 5 seconds
+        time.sleep(5)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
     data = scipy.io.loadmat('../Data/cylinder_nektar_wake.mat')
@@ -88,11 +92,11 @@ if __name__ == "__main__":
     print(U_star.element_size() * U_star.nelement())
     # print the size of U_star in GB
     print(U_star.element_size() * U_star.nelement() / 1024**3)
-    p_star = torch.tensor(data['p_star'], dtype=torch.float32).to(device)
+    P_star = torch.tensor(data['p_star'], dtype=torch.float32).to(device)
     # print the size of p_star in bytes
-    print(p_star.element_size() * p_star.nelement())
+    print(P_star.element_size() * P_star.nelement())
     # print the size of p_star in GB
-    print(p_star.element_size() * p_star.nelement() / 1024**3)
+    print(P_star.element_size() * P_star.nelement() / 1024**3)
     t_star = torch.tensor(data['t'], dtype=torch.float32).to(device)
     # print the size of t_star in bytes
     print(t_star.element_size() * t_star.nelement())
@@ -157,8 +161,51 @@ if __name__ == "__main__":
             print(f"Epoch {epoch}: Loss = {loss.item()}")
     end_time = time.time()
     print(f"Training time: {end_time - start_time} seconds")
-    # Prediction (optional)
     
     # Save the model
     torch.save(model.state_dict(), "model.pth")
+
+
+    # Prediction (optional)
+    predict = True
+    if predict == True:
+        # Assuming model and data loading setup has already been done
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # Define the snapshot number to visualize
+        snap = 100
+        
+        # Convert data to tensors and ensure they are on the correct device
+        x_star = torch.tensor(X_star[:,0:1], dtype=torch.float32, device=device)
+        y_star = torch.tensor(X_star[:,1:2], dtype=torch.float32, device=device)
+        t_star = torch.tensor(TT[:,snap], dtype=torch.float32, device=device)
+
+        u_star = torch.tensor(U_star[:,0,snap], dtype=torch.float32, device=device)
+        v_star = torch.tensor(U_star[:,1,snap], dtype=torch.float32, device=device)
+        p_star = torch.tensor(P_star[:,snap], dtype=torch.float32, device=device)
+
+        # Prediction using the model's forward method
+        model.eval()  # Set the model to evaluation mode
+        with torch.no_grad():
+            u_pred, v_pred, p_pred, f_u_pred, f_v_pred = model(x_star, y_star, t_star)
+
+        # Compute errors
+        error_u = torch.linalg.norm(u_star - u_pred) / torch.linalg.norm(u_star)
+        error_v = torch.linalg.norm(v_star - v_pred) / torch.linalg.norm(v_star)
+        error_p = torch.linalg.norm(p_star - p_pred) / torch.linalg.norm(p_star)
+
+        # Retrieve parameters directly since they are now attributes of the model
+        lambda_1_value = model.lambda_1.item()
+        lambda_2_value = model.lambda_2.item()
+
+        # Calculate parameter errors
+        error_lambda_1 = abs(lambda_1_value - 1.0) * 100
+        error_lambda_2 = abs(lambda_2_value - 0.01) / 0.01 * 100
+
+        # Print errors
+        print(f'Error u: {error_u:e}')
+        print(f'Error v: {error_v:e}')
+        print(f'Error p: {error_p:e}')
+        print(f'Error l1: {error_lambda_1:.5f}%')
+        print(f'Error l2: {error_lambda_2:.5f}%')
+
     
