@@ -168,9 +168,7 @@ if predict:
     t_star = t_star.cpu().detach().numpy()
     
     
-    
     # Generate the grid data
-    
     lb = X_star.min(0)
     ub = X_star.max(0)
     nn = 200
@@ -182,3 +180,4 @@ if predict:
     VV_star = griddata(X_star, v_pred.flatten(), (X, Y), method='cubic')
     PP_star = griddata(X_star, p_pred.flatten(), (X, Y), method='cubic')
     P_exact = griddata(X_star, p_star.flatten(), (X, Y), method='cubic')
+    
