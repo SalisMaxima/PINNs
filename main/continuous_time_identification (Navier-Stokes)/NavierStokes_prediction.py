@@ -4,6 +4,7 @@ import numpy as np
 import time
 import scipy.io
 from NavierStokes_Pytorch_V1 import PhysicsInformedNN
+from scipy.interpolate import griddata
 # Load the data 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
@@ -84,7 +85,7 @@ if predict:
     # Retrieve the lambda values
     lambda_1_value = model.lambda_1.item()
     lambda_2_value = model.lambda_2.item()
-
+    print("The estimated lambda values are")
     print(lambda_1_value, lambda_2_value)
 
     error_lambda_1 = abs(lambda_1_value - 1.0) * 100
@@ -120,11 +121,28 @@ if predict:
     model.load_state_dict(torch.load('model_noisy.pth', map_location=device))
     model.eval()
     # only retreive lambda values
-    lambda_1_value = model.lambda_1.item()
-    lambda_2_value = model.lambda_2.item()
-    error_lambda_1 = abs(lambda_1_value - 1.0) * 100
-    error_lambda_2 = abs(lambda_2_value - 0.01) / 0.01 * 100
+    lambda_1_value_noisy = model.lambda_1.item()
+    lambda_2_value_noisy = model.lambda_2.item()
+    error_lambda_1 = abs(lambda_1_value_noisy - 1.0) * 100
+    error_lambda_2 = abs(lambda_2_value_noisy - 0.01) / 0.01 * 100
+    # The estimated lambda values is
+    print("The estimated lambda values are")
+    print(lambda_1_value_noisy, lambda_2_value_noisy)
     print(f'Error lambda_1: {error_lambda_1:e}')
     print(f'Error lambda_2: {error_lambda_2:e}')
     # save the results
     np.savetxt('error_lambda_1_noisy.txt', np.array([error_lambda_1]))
+    np.savetxt('error_lambda_2_noisy.txt', np.array([error_lambda_2]))
+    
+    
+    lb = X_star.min(0)
+    ub = X_star.max(0)
+    nn = 200
+    x = np.linspace(lb[0], ub[0], nn)
+    y = np.linspace(lb[1], ub[1], nn)
+    X, Y = np.meshgrid(x,y)
+    
+    UU_star = griddata(X_star, u_pred.flatten(), (X, Y), method='cubic')
+    VV_star = griddata(X_star, v_pred.flatten(), (X, Y), method='cubic')
+    PP_star = griddata(X_star, p_pred.flatten(), (X, Y), method='cubic')
+    P_exact = griddata(X_star, p_star.flatten(), (X, Y), method='cubic')

@@ -488,4 +488,3 @@ if __name__ == "__main__":
     ax.text(0.015,0.0,s)
     
     # savefig('./figures/NavierStokes_prediction') 
-
