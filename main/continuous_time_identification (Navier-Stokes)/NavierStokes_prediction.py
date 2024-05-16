@@ -121,7 +121,7 @@ if predict:
 
 
 
-    # Then for the hoisy  model
+    # Then for the noisy  model with 1% noise
     model.load_state_dict(torch.load('model_noisy.pth', map_location=device))
     model.eval()
     # only retreive lambda values
@@ -138,6 +138,23 @@ if predict:
     np.savetxt('error_lambda_1_noisy.txt', np.array([error_lambda_1]))
     np.savetxt('error_lambda_2_noisy.txt', np.array([error_lambda_2]))
     
+    # Then for the noisy  model with 5% noise
+    model.load_state_dict(torch.load('model_noisy_5.pth', map_location=device))
+    model.eval()
+    # only retreive lambda values
+    lambda_1_value_noisy_05 = model.lambda_1.item()
+    lambda_2_value_noisy_05 = model.lambda_2.item()
+    error_lambda_1 = abs(lambda_1_value_noisy_05 - 1.0) * 100
+    error_lambda_2 = abs(lambda_2_value_noisy_05 - 0.01) / 0.01 * 100
+    # The estimated lambda values is
+    print("The estimated lambda values are")
+    print(lambda_1_value_noisy_05, lambda_2_value_noisy_05)
+    print(f'Error lambda_1: {error_lambda_1:e}')
+    print(f'Error lambda_2: {error_lambda_2:e}')
+    # save the results
+    np.savetxt('error_lambda_1_noisy_05.txt', np.array([error_lambda_1]))
+    np.savetxt('error_lambda_2_noisy_05.txt', np.array([error_lambda_2]))
+    
     
     # Generate the grid data
     # start by detaching the tensors
@@ -149,6 +166,8 @@ if predict:
     x_star = x_star.cpu().detach().numpy()
     y_star = y_star.cpu().detach().numpy()
     t_star = t_star.cpu().detach().numpy()
+    
+    
     
     # Generate the grid data
     
