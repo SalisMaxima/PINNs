@@ -84,7 +84,7 @@ if __name__ == "__main__":
         # wait for 5 seconds
         time.sleep(5)
      
-     # Commented out option to use mps as device since this did not work on my machine
+     # Commented out option to use mps as device since this did not work on my machinex$
      #if torch.backends.mps.is_available():
         #device = torch.device("mps")
     layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
