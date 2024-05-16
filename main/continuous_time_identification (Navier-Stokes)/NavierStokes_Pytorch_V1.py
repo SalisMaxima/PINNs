@@ -146,11 +146,3 @@ if __name__ == "__main__":
     # Save the model
     torch.save(model.state_dict(), "model2.pth")
     print("Model saved successfully!")
-
-
-
-#%% 
-############################################## Training Noisy Data ########################################################
-noise = 0.01        
-u_train = u_train + noise*np.std(u_train)*np.random.randn(u_train.shape[0], u_train.shape[1])
-v_train = v_train + noise*np.std(v_train)*np.random.randn(v_train.shape[0], v_train.shape[1])    

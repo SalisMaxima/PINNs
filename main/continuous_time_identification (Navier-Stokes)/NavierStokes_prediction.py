@@ -3,7 +3,7 @@ import torch
 import numpy as np
 import time
 import scipy.io
-from NavierStokes_Pytorch_scratch import PhysicsInformedNN
+from NavierStokes_Pytorch_V1 import PhysicsInformedNN
 # Load the data 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
@@ -50,7 +50,7 @@ v = U_star[:, 1, :].flatten()[:, None]
     
 predict = True
 if predict:
-    snap = 10
+    snap = 100
     x_star = XX[:, snap].unsqueeze(-1).requires_grad_(True).to(device)
     y_star = YY[:, snap].unsqueeze(-1).requires_grad_(True).to(device)
     t_star = TT[:, snap].unsqueeze(-1).requires_grad_(True).to(device)
@@ -113,3 +113,18 @@ if predict:
     np.savetxt('lambda_2.txt', np.array([lambda_2_value]))
 
     print('Results saved')
+
+
+
+    # Then for the hoisy  model
+    model.load_state_dict(torch.load('model_noisy.pth', map_location=device))
+    model.eval()
+    # only retreive lambda values
+    lambda_1_value = model.lambda_1.item()
+    lambda_2_value = model.lambda_2.item()
+    error_lambda_1 = abs(lambda_1_value - 1.0) * 100
+    error_lambda_2 = abs(lambda_2_value - 0.01) / 0.01 * 100
+    print(f'Error lambda_1: {error_lambda_1:e}')
+    print(f'Error lambda_2: {error_lambda_2:e}')
+    # save the results
+    np.savetxt('error_lambda_1_noisy.txt', np.array([error_lambda_1]))
