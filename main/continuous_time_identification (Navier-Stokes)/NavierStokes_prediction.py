@@ -139,7 +139,7 @@ if predict:
     np.savetxt('error_lambda_2_noisy.txt', np.array([error_lambda_2]))
     
     # Then for the noisy  model with 5% noise
-    model.load_state_dict(torch.load('model_noisy_5.pth', map_location=device))
+    model.load_state_dict(torch.load('model_noisy_05.pth', map_location=device))
     model.eval()
     # only retreive lambda values
     lambda_1_value_noisy_05 = model.lambda_1.item()
