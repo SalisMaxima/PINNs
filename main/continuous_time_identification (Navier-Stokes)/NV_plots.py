@@ -1,6 +1,8 @@
 # Import necessary libraries
 import scipy.io
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.gridspec as gridspec
@@ -8,6 +10,7 @@ from plotting import newfig, savefig
 from NavierStokes_prediction import *
 from itertools import product, combinations
 from mpl_toolkits.mplot3d import Axes3D
+
 # Define auxiliary functions for plotting
 def axisEqual3D(ax): # From NavierStokes.py by Raisii et al
     extents = np.array([getattr(ax, 'get_{}lim'.format(dim))() for dim in 'xyz'])
@@ -51,6 +54,7 @@ y_train = y[idx, :]
 t_train = t[idx, :]
 u_train = u[idx, :]
 v_train = v[idx, :]
+
 
 
 # Load Data
@@ -144,16 +148,16 @@ ax.set_title('Vorticity', fontsize=10)
 # Create a GridSpec object with 1 row and 2 columns
 gs1 = gridspec.GridSpec(1, 2)
 # Update GridSpec layout parameters
-gs1.update(top=1-2/4, bottom=0.0, left=0.01, right=0.99, wspace=0)
+gs1.update(top=1-2/4, bottom=0.0, left=0.01, right=0.99, wspace=0.1)
 # Create a subplot with 3D projection in the first GridSpec slot
 ax = plt.subplot(gs1[:, 0],  projection='3d')
 # Turn off axis lines and labels
 ax.axis('off')
 
 # Define ranges for x, t, and y coordinates
-r1 = [x_star.min().detach(), x_star.max().detach()]
+r1 = [x_star.min(), x_star.max()]
 r2 = [data['t'].min(), data['t'].max()]
-r3 = [y_star.min().detach(), y_star.max().detach()]
+r3 = [y_star.min(), y_star.max()]
 
 # Plot 3D box edges based on coordinate ranges
 for s, e in combinations(np.array(list(product(r1, r2, r3))), 2):
@@ -161,9 +165,9 @@ for s, e in combinations(np.array(list(product(r1, r2, r3))), 2):
         ax.plot3D(*zip(s, e), color="k", linewidth=0.5)
 
 # Scatter plot of training data points
-ax.scatter(x_train, t_train, y_train, s=0.1)
+ax.scatter(x_train, t_train, y_train, s=0.1, alpha=0.15)
 # Contour plot of training data
-ax.contourf(X, UU_star, Y, zdir='y', offset=t_star.mean(), cmap='rainbow', alpha=0.8)
+ax.contourf(X, UU_star, Y, zdir='y', offset=t_star.mean(), cmap='rainbow', alpha=0.85)
 
 # Label the axes
 ax.text(x_star.mean(), data['t'].min() - 1, y_star.min() - 1, '$x$')
@@ -185,9 +189,9 @@ ax = plt.subplot(gs1[:, 1],  projection='3d')
 ax.axis('off')
 
 # Define ranges for x, t, and y coordinates
-r1 = [x_star.min().detach(), x_star.max().detach()]
+r1 = [x_star.min(), x_star.max()]
 r2 = [data['t'].min(), data['t'].max()]
-r3 = [y_star.min().detach(), y_star.max().detach()]
+r3 = [y_star.min(), y_star.max()]
 
 # Plot 3D box edges based on coordinate ranges
 for s, e in combinations(np.array(list(product(r1, r2, r3))), 2):
@@ -195,9 +199,10 @@ for s, e in combinations(np.array(list(product(r1, r2, r3))), 2):
         ax.plot3D(*zip(s, e), color="k", linewidth=0.5)
 
 # Scatter plot of training data points
-ax.scatter(x_train, t_train, y_train, s=0.1)
+ax.scatter(x_train, t_train, y_train, s=0.1,alpha=0.15)
+
 # Contour plot of training data
-ax.contourf(X, VV_star, Y, zdir='y', offset=t_star.mean(), cmap='rainbow', alpha=0.8)
+ax.contourf(X, VV_star, Y, zdir='y', offset=t_star.mean(), cmap='rainbow', alpha=0.85) 
 
 # Label the axes
 ax.text(x_star.mean(), data['t'].min() - 1, y_star.min() - 1, '$x$')
@@ -213,7 +218,7 @@ ax.set_zlim3d(r3)
 axisEqual3D(ax)
 
 # Save figure (commented out)
-# savefig('./figures/NavierStokes_data')
+savefig('./figures/NavierStokes_data_my2',crop=False)
 
 # Create a new figure and axis
 fig, ax = newfig(1.015, 0.8)
@@ -230,7 +235,7 @@ gs2.update(top=1, bottom=1-1/2, left=0.1, right=0.9, wspace=0.5)
 ax = plt.subplot(gs2[:, 0])
 # Display an image of the predicted pressure
 h = ax.imshow(PP_star, interpolation='nearest', cmap='rainbow', 
-              extent=[x_star.min().detach(), x_star.max().detach(), y_star.min().detach(), y_star.max().detach()], 
+              extent=[x_star.min(), x_star.max(), y_star.min(), y_star.max()], 
               origin='lower', aspect='auto')
 # Create a colorbar for the image
 divider = make_axes_locatable(ax)
@@ -254,7 +259,7 @@ ax.set_title('Predicted pressure', fontsize=10)
 ax = plt.subplot(gs2[:, 1])
 # Display an image of the exact pressure
 h = ax.imshow(P_exact, interpolation='nearest', cmap='rainbow', 
-              extent=[x_star.min().detach(), x_star.max().detach(), y_star.min().detach(), y_star.max().detach()], 
+              extent=[x_star.min(), x_star.max(), y_star.min(), y_star.max()], 
               origin='lower', aspect='auto')
 # Create a colorbar for the image
 divider = make_axes_locatable(ax)

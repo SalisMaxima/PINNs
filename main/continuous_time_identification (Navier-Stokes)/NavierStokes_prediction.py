@@ -73,8 +73,12 @@ if predict:
     f_u_pred = f_u_pred.detach()
     f_v_pred = f_v_pred.detach()
 
+    # inspect shape of outputs compared to the inputs
+    #print(u_pred.shape, u_star.shape)
+    #print(v_pred.shape, v_star.shape)
+    #print(p_pred.shape, p_star.shape)
 
-    # Compute the error with np.linalg.norm
+    # Compute the error with 2 norm 
     error_u = (u_star - u_pred).norm(2) / u_star.norm(2)
     error_v = (v_star - v_pred).norm(2) / v_star.norm(2)
     error_p = (p_star - p_pred).norm(2) / p_star.norm(2)
@@ -134,6 +138,19 @@ if predict:
     np.savetxt('error_lambda_1_noisy.txt', np.array([error_lambda_1]))
     np.savetxt('error_lambda_2_noisy.txt', np.array([error_lambda_2]))
     
+    
+    # Generate the grid data
+    # start by detaching the tensors
+    u_pred = u_pred.cpu().detach().numpy()
+    v_pred = v_pred.cpu().detach().numpy()
+    p_pred = p_pred.cpu().detach().numpy()
+    p_star = p_star.cpu().detach().numpy()
+    X_star = X_star.cpu().detach().numpy()
+    x_star = x_star.cpu().detach().numpy()
+    y_star = y_star.cpu().detach().numpy()
+    t_star = t_star.cpu().detach().numpy()
+    
+    # Generate the grid data
     
     lb = X_star.min(0)
     ub = X_star.max(0)
