@@ -129,7 +129,7 @@ if __name__ == "__main__":
     v_train = v[idx, :]
 
     # Add noise to the training data u_train and v_train
-    noise_level = 0.2
+    noise_level = 0.01
     u_train += noise_level * torch.std(u_train) * torch.randn_like(u_train)
     v_train += noise_level * torch.std(v_train) * torch.randn_like(v_train)
     print("Training data with noise added successfully!")
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     print(f"Training time: {end_time - start_time} seconds")
     
     # Save the model
-    torch.save(model.state_dict(), "model_noisy_20.pth")
+    torch.save(model.state_dict(), "model_noisy_01.pth")
     print("Model saved successfully!")
 
 
