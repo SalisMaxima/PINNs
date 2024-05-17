@@ -305,6 +305,12 @@ s = s + r' \\'
 s = s + r' v_t + %.3f (u v_x + v v_y) = -p_y + %.5f (v_{xx} + v_{yy})' % (lambda_1_value_noisy, lambda_2_value_noisy)
 s = s + r' \end{array}$ \\ '
 s = s + r' \hline'
+s = s + r' Identified PDE (5\% noise) & $\begin{array}{c}'
+s = s + r' u_t + %.3f (u u_x + v u_y) = -p_x + %.5f (u_{xx} + u_{yy})' % (lambda_1_value_noisy_05, lambda_2_value_noisy_05)
+s = s + r' \\'  
+s = s + r' v_t + %.3f (u v_x + v v_y) = -p_y + %.5f (v_{xx} + v_{yy})' % (lambda_1_value_noisy_05, lambda_2_value_noisy_05)
+s = s + r' \end{array}$ \\ '
+s = s + r' \hline'
 s = s + r' \end{tabular}$'
 
 ax.text(0.015,0.0,s)

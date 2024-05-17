@@ -16,6 +16,7 @@ class PhysicsInformedNN(torch.nn.Module):
     def __init__(self, layers, activation='tanh'):
         super(PhysicsInformedNN, self).__init__()
         self.model = nn.Sequential()
+        
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         activation_function = nn.Tanh() if activation == 'tanh' else nn.ReLU()
@@ -72,11 +73,20 @@ class PhysicsInformedNN(torch.nn.Module):
 
 # Main execution logic to setup the model and start training
 if __name__ == "__main__":
-    if torch.cuda.is_available():
+    if torch.cuda.is_available() == True:
         print("CUDA is available! Testing with a simple tensor operation.")
         # wait for 5 seconds
         time.sleep(5)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda")
+    else:
+        print("CUDA is not available! Using CPU instead.")
+        device = torch.device("cpu")
+        # wait for 5 seconds
+        time.sleep(5)
+     
+     # Commented out option to use mps as device since this did not work on my machinex$
+     #if torch.backends.mps.is_available():
+        #device = torch.device("mps")
     layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
     data = scipy.io.loadmat('../Data/cylinder_nektar_wake.mat')
   
