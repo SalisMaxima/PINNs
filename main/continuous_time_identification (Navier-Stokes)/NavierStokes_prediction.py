@@ -224,41 +224,46 @@ if predict:
     PP_stars = np.zeros((nn, nn, T))
 
     print(T)
-    for snap in range(T):
-        print(snap)
-        x_star = XX[:, snap].unsqueeze(-1).requires_grad_(True).to(device)
-        y_star = YY[:, snap].unsqueeze(-1).requires_grad_(True).to(device)
-        t_star = TT[:, snap].unsqueeze(-1).requires_grad_(True).to(device)
+    predict = True
+    if predict:
+        for snap in range(T):
+            print(snap)
+            x_star = XX[:, snap].unsqueeze(-1).requires_grad_(True).to(device)
+            y_star = YY[:, snap].unsqueeze(-1).requires_grad_(True).to(device)
+            t_star = TT[:, snap].unsqueeze(-1).requires_grad_(True).to(device)
 
-        u_star = U_star[:, 0, snap].unsqueeze(1).to(device)
-        v_star = U_star[:, 1, snap].unsqueeze(1).to(device)
-        p_star = P_star[:, snap].unsqueeze(1).to(device)
+            u_star = U_star[:, 0, snap].unsqueeze(1).to(device)
+            v_star = U_star[:, 1, snap].unsqueeze(1).to(device)
+            p_star = P_star[:, snap].unsqueeze(1).to(device)
 
-        model.load_state_dict(torch.load('model.pth', map_location=device))
-        model.eval()
+            model.load_state_dict(torch.load('model.pth', map_location=device))
+            model.eval()
 
-        u_pred, v_pred, p_pred, f_u_pred, f_v_pred = model(x_star, y_star, t_star)
-        u_pred = u_pred.detach()
-        v_pred = v_pred.detach()
-        p_pred = p_pred.detach()
-        f_u_pred = f_u_pred.detach()
-        f_v_pred = f_v_pred.detach()
+            u_pred, v_pred, p_pred, f_u_pred, f_v_pred = model(x_star, y_star, t_star)
+            u_pred = u_pred.detach()
+            v_pred = v_pred.detach()
+            p_pred = p_pred.detach()
+            f_u_pred = f_u_pred.detach()
+            f_v_pred = f_v_pred.detach()
 
-        # Generate the grid data
-        u_pred = u_pred.cpu().detach().numpy()
-        v_pred = v_pred.cpu().detach().numpy()
-        p_pred = p_pred.cpu().detach().numpy()
+            # Generate the grid data
+            u_pred = u_pred.cpu().detach().numpy()
+            v_pred = v_pred.cpu().detach().numpy()
+            p_pred = p_pred.cpu().detach().numpy()
 
-        UU_star = griddata(X_star, u_pred.flatten(), (X, Y), method='cubic')
-        VV_star = griddata(X_star, v_pred.flatten(), (X, Y), method='cubic')
-        PP_star = griddata(X_star, p_pred.flatten(), (X, Y), method='cubic')
+            UU_star = griddata(X_star, u_pred.flatten(), (X, Y), method='cubic')
+            VV_star = griddata(X_star, v_pred.flatten(), (X, Y), method='cubic')
+            PP_star = griddata(X_star, p_pred.flatten(), (X, Y), method='cubic')
 
-        # Store the results
-        UU_stars[:, :, snap] = UU_star
-        VV_stars[:, :, snap] = VV_star
-        PP_stars[:, :, snap] = PP_star
+            # Store the results
+            UU_stars[:, :, snap] = UU_star
+            VV_stars[:, :, snap] = VV_star
+            PP_stars[:, :, snap] = PP_star
 
-        # save the results for the predicted pressure field
-        
+            # save the results for the predicted pressure field
+            np.save('UU_stars.npy', UU_stars)
+            np.save('VV_stars.npy', VV_stars)
+            np.save('PP_stars.npy', PP_stars)
+
 
 
