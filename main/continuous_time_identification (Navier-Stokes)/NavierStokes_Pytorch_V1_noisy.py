@@ -34,8 +34,8 @@ class PhysicsInformedNN(torch.nn.Module):
         cat_input = torch.cat([x, y, t], dim=1)
         output = self.model(cat_input)
         
-        psi = output[:, 0:1] # Extract the first output as the stream function and ensure it has gradient enabled
-        p = output[:, 1:2] # Extract the second output as the pressure field and ensure it has gradient enabled
+        psi = output[:, 0:1] # Extract the first output as the stream function
+        p = output[:, 1:2] # Extract the second output as the pressure field
         
         u = grad(psi.sum(), y, create_graph=True)[0] # Compute the u velocity component using automatic differentiation
         v = -grad(psi.sum(), x, create_graph=True)[0] # Compute the v velocity component using automatic differentiation
@@ -62,11 +62,13 @@ class PhysicsInformedNN(torch.nn.Module):
 
     def loss_function(self, u_true, v_true, outputs):
         u_pred, v_pred, p_pred, f_u_pred, f_v_pred = outputs
+        # Prediction error
         mse_u = torch.mean((u_true - u_pred) ** 2)
         mse_v = torch.mean((v_true - v_pred) ** 2)
+        # Residual error
         mse_f_u = torch.mean(f_u_pred ** 2)
         mse_f_v = torch.mean(f_v_pred ** 2)
-        total_loss = mse_u + mse_v + mse_f_u + mse_f_v
+        total_loss = (mse_u + mse_v)*1 + (mse_f_u + mse_f_v)*1
         return total_loss
 
 
@@ -82,25 +84,12 @@ if __name__ == "__main__":
   
     # Extract and process data
     U_star = torch.tensor(data['U_star'], dtype=torch.float32).to(device)
-    # print the size of U_star in bytes
-    #print(U_star.element_size() * U_star.nelement())
-    # print the size of U_star in GB
-    #print(U_star.element_size() * U_star.nelement() / 1024**3)
+   
     P_star = torch.tensor(data['p_star'], dtype=torch.float32).to(device)
-    # print the size of p_star in bytes
-    #print(P_star.element_size() * P_star.nelement())
-    # print the size of p_star in GB
-    #print(P_star.element_size() * P_star.nelement() / 1024**3)
+    
     t_star = torch.tensor(data['t'], dtype=torch.float32).to(device)
-    # print the size of t_star in bytes
-    #print(t_star.element_size() * t_star.nelement())
-    # print the size of t_star in GB
-    #print(t_star.element_size() * t_star.nelement() / 1024**3)
+    
     X_star = torch.tensor(data['X_star'], dtype=torch.float32).to(device)
-    # print the size of X_star in bytes
-    #print(X_star.element_size() * X_star.nelement())
-    # print the size of X_star in GB
-    #print(X_star.element_size() * X_star.nelement() / 1024**3)
     
     # Flatten and prepare data
     N = X_star.shape[0]

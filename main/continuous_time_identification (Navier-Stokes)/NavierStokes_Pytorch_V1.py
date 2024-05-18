@@ -63,11 +63,13 @@ class PhysicsInformedNN(torch.nn.Module):
 
     def loss_function(self, u_true, v_true, outputs):
         u_pred, v_pred, p_pred, f_u_pred, f_v_pred = outputs
+        # Prediction error
         mse_u = torch.mean((u_true - u_pred) ** 2)
         mse_v = torch.mean((v_true - v_pred) ** 2)
+        # Residual error
         mse_f_u = torch.mean(f_u_pred ** 2)
         mse_f_v = torch.mean(f_v_pred ** 2)
-        total_loss = mse_u + mse_v + mse_f_u + mse_f_v
+        total_loss = (mse_u + mse_v)*1 + (mse_f_u + mse_f_v)*1
         return total_loss
 
 
