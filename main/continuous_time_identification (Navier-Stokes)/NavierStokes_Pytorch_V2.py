@@ -129,5 +129,5 @@ def train_pinn(data_path, layers, epochs=200000, batch_size=5000, lr=0.001, save
 if __name__ == "__main__":
     layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
     data_path = '../Data/cylinder_nektar_wake.mat'
-    save_path = "model.pth"
+    save_path = "model3.pth"
     train_pinn(data_path, layers, epochs=200000, batch_size=5000, lr=0.001, save_path=save_path)
