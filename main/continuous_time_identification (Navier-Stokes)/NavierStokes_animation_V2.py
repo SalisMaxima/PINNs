@@ -4,10 +4,16 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import griddata
-from NavierStokes_prediction import p_pred, u_pred
 
 # Load the data
 data = scipy.io.loadmat('../Data/cylinder_nektar_wake.mat')
+# Load save predictions
+# Saved as UU_stars.npy, PP_stars.npy, P_exact.npy and VV_stars.npy
+PP_stars = np.load('PP_stars.npy')
+UU_stars = np.load('UU_stars.npy')
+VV_stars = np.load('VV_stars.npy')
+P_exacts = np.load('P_exacts.npy')
+
 
 # Extract data
 P_star = data['p_star']  # Pressure data
@@ -68,14 +74,16 @@ def update(frame):
 ani = animation.FuncAnimation(fig, update, frames=range(T), init_func=init,interval=80, blit=False)
 
 # Save animation as GIF with higher DPI
-ani.save('./figures/pressure_prediction.gif', writer='pillow', dpi=dpi)
+ani.save('./figures/pressure_exact.gif', writer='pillow', dpi=dpi)
 
 # Then do the same for the predicted pressure field
 # The predicted pressure is p_pred
+p_min, p_max = PP_stars.min(), PP_stars.max()
+
 def init2():
     ax.clear()
     # Interpolate the pressure data to the high-resolution grid for the first frame
-    P_frame = griddata(X_star, p_pred[:, 0], (X_grid, Y_grid), method='cubic')
+    P_frame = PP_stars[:,:, 0]
 
     h = ax.imshow(P_frame, interpolation='bicubic', cmap='rainbow', 
                   extent=[x_min, x_max, y_min, y_max], origin='lower', aspect='auto', vmin=p_min, vmax=p_max)
@@ -89,7 +97,7 @@ def init2():
 def update2(frame):
     ax.clear()
     # Interpolate the pressure data to the high-resolution grid for the current frame
-    P_frame = griddata(X_star, p_pred[:, frame], (X_grid, Y_grid), method='cubic')
+    P_frame = PP_start[:,:, frame]
     
     h = ax.imshow(P_frame, interpolation='bicubic', cmap='rainbow', 
                   extent=[x_min, x_max, y_min, y_max], origin='lower', aspect='auto', vmin=p_min, vmax=p_max)
@@ -111,8 +119,9 @@ ani.save('./figures/pressure_prediction.gif', writer='pillow', dpi=dpi)
 # Finally make a comparison between the exact and predicted pressure fields
 # Subtract the predicted pressure field from the exact pressure field
 # Thus getting the error field
-PP_Errpr = P_exact - PP_star
+PP_Error = P_exacts - PP_stars
 
+p_min, p_max = PP_Error.min(), PP_Error.max()
 # Initialize the plot
 fig, ax = plt.subplots(figsize=(10, 6), dpi=dpi)  # Increase figure size and DPI
 divider = make_axes_locatable(ax)
@@ -121,7 +130,7 @@ cax = divider.append_axes("right", size="5%", pad=0.05)
 # Function to initialize the plot
 def init3():
     ax.clear()
-    h = ax.imshow(PP_Errpr[:, 0], interpolation='bicubic', cmap='rainbow', 
+    h = ax.imshow(PP_Error[:, 0], interpolation='bicubic', cmap='rainbow', 
                   extent=[x_min, x_max, y_min, y_max], origin='lower', aspect='auto', vmin=p_min, vmax=p_max)
     fig.colorbar(h, cax=cax)
     ax.set_title(f'Time: {t_star[0][0]:.2f}')
@@ -132,7 +141,7 @@ def init3():
 # Function to update the plot
 def update3(frame):
     ax.clear()
-    h = ax.imshow(PP_Errpr[:, frame], interpolation='bicubic', cmap='rainbow', 
+    h = ax.imshow(PP_Error[:, frame], interpolation='bicubic', cmap='rainbow', 
                   extent=[x_min, x_max, y_min, y_max], origin='lower', aspect='auto', vmin=p_min, vmax=p_max)
     if frame == 0:
         fig.colorbar(h, cax=cax)

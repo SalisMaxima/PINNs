@@ -222,7 +222,7 @@ if predict:
     UU_stars = np.zeros((nn, nn, T))
     VV_stars = np.zeros((nn, nn, T))
     PP_stars = np.zeros((nn, nn, T))
-
+    P_exacts = np.zeros((nn, nn, T))
     print(T)
     predict = True
     if predict:
@@ -254,16 +254,17 @@ if predict:
             UU_star = griddata(X_star, u_pred.flatten(), (X, Y), method='cubic')
             VV_star = griddata(X_star, v_pred.flatten(), (X, Y), method='cubic')
             PP_star = griddata(X_star, p_pred.flatten(), (X, Y), method='cubic')
-
+            P_exact = griddata(X_star, p_star.cpu().flatten(), (X, Y), method='cubic')
             # Store the results
             UU_stars[:, :, snap] = UU_star
             VV_stars[:, :, snap] = VV_star
             PP_stars[:, :, snap] = PP_star
+            P_exacts[:, :, snap] = P_exact
 
-            # save the results for the predicted pressure field
-            np.save('UU_stars.npy', UU_stars)
-            np.save('VV_stars.npy', VV_stars)
-            np.save('PP_stars.npy', PP_stars)
-
+        # save the results for the predicted pressure field
+        np.save('UU_stars.npy', UU_stars)
+        np.save('VV_stars.npy', VV_stars)
+        np.save('PP_stars.npy', PP_stars)
+        np.save('P_exacts.npy', P_exacts)
 
 
