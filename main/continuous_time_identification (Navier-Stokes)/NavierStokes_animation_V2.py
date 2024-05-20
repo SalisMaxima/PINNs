@@ -41,7 +41,7 @@ fig, ax = plt.subplots(figsize=(10, 6), dpi=dpi)  # Increase figure size and DPI
 divider = make_axes_locatable(ax)
 cax = divider.append_axes("right", size="5%", pad=0.05)
 
-#Starting with the exact pressure field
+# Starting with the exact pressure field
 print("Animating the exact pressure field...")
 # Function to initialize the plot
 def init():
@@ -52,7 +52,7 @@ def init():
     h = ax.imshow(P_frame, interpolation='bicubic', cmap='rainbow', 
                   extent=[x_min, x_max, y_min, y_max], origin='lower', aspect='auto', vmin=p_min, vmax=p_max)
     fig.colorbar(h, cax=cax)
-    ax.set_title(f'Time: {t_star[0][0]:.2f}')
+    ax.set_title('True pressure distribution\nTime: {:.2f}'.format(t_star[0][0]), fontsize=16)
     ax.set_xlabel('$x$')
     ax.set_ylabel('$y$')
     return ax,
@@ -67,7 +67,7 @@ def update(frame):
                   extent=[x_min, x_max, y_min, y_max], origin='lower', aspect='auto', vmin=p_min, vmax=p_max)
     if frame == 0:
         fig.colorbar(h, cax=cax)
-    ax.set_title(f'Time: {t_star[frame][0]:.2f}')
+    ax.set_title('True pressure distribution\nTime: {:.2f}'.format(t_star[frame][0]), fontsize=16)
     ax.set_xlabel('$x$')
     ax.set_ylabel('$y$')
     return ax,
@@ -98,7 +98,7 @@ def init2():
     h = ax.imshow(P_frame, interpolation='bicubic', cmap='rainbow', 
                   extent=[x_min, x_max, y_min, y_max], origin='lower', aspect='auto', vmin=p_min, vmax=p_max)
     fig.colorbar(h, cax=cax)
-    ax.set_title(f'Time: {t_star[0][0]:.2f}')
+    ax.set_title('Predicted pressure distribution\nTime: {:.2f}'.format(t_star[0][0]), fontsize=16)
     ax.set_xlabel('$x$')
     ax.set_ylabel('$y$')
     return ax,
@@ -113,7 +113,7 @@ def update2(frame):
                   extent=[x_min, x_max, y_min, y_max], origin='lower', aspect='auto', vmin=p_min, vmax=p_max)
     if frame == 0:
         fig.colorbar(h, cax=cax)
-    ax.set_title(f'Time: {t_star[frame][0]:.2f}')
+    ax.set_title('Predicted pressure distribution\nTime: {:.2f}'.format(t_star[frame][0]), fontsize=16)
     ax.set_xlabel('$x$')
     ax.set_ylabel('$y$')
     return ax,
@@ -145,7 +145,7 @@ def init3():
     h = ax.imshow(PP_Error[:, 0], interpolation='bicubic', cmap='rainbow', 
                   extent=[x_min, x_max, y_min, y_max], origin='lower', aspect='auto', vmin=p_min, vmax=p_max)
     fig.colorbar(h, cax=cax)
-    ax.set_title(f'Time: {t_star[0][0]:.2f}')
+    ax.set_title('Error of pressure distribution\nTime: {:.2f}'.format(t_star[0][0]), fontsize=16)
     ax.set_xlabel('$x$')
     ax.set_ylabel('$y$')
     return ax,
@@ -157,7 +157,7 @@ def update3(frame):
                   extent=[x_min, x_max, y_min, y_max], origin='lower', aspect='auto', vmin=p_min, vmax=p_max)
     if frame == 0:
         fig.colorbar(h, cax=cax)
-    ax.set_title(f'Time: {t_star[frame][0]:.2f}')
+    ax.set_title('Error of pressure distribution\nTime: {:.2f}'.format(t_star[frame][0]), fontsize=16)
     ax.set_xlabel('$x$')
     ax.set_ylabel('$y$')
     return ax,
@@ -169,5 +169,3 @@ ani3 = animation.FuncAnimation(fig, update3, frames=range(T), init_func=init3,in
 ani3.save('./figures/pressure_prediction_error.gif', writer='pillow', dpi=dpi)
 
 print("Animation saved successfully!")
-
-
