@@ -147,5 +147,5 @@ def train_pinn(data_path, layers, epochs=200000, batch_size=5000, lr=0.001, nois
 if __name__ == "__main__":
     layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
     data_path = '../Data/cylinder_nektar_wake.mat'
-    save_path = "model_noisy_xavier_10.pth"
-    train_pinn(data_path, layers, epochs=200000, batch_size=5000, lr=0.001, noise_level=0.1, save_path=save_path)
+    save_path = "model_noisy_xavier_01.pth"
+    train_pinn(data_path, layers, epochs=200000, batch_size=5000, lr=0.001, noise_level=0.01, save_path=save_path)
