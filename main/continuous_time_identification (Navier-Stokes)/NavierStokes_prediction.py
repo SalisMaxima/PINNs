@@ -116,7 +116,7 @@ if predict:
     # Then for the third run of the no noise model
     # This one is initialized with the Xavier initialization
     print("\n Third run of the no noise model and Xavier initialization")
-    model.load_state_dict(torch.load('model3.pth', map_location=device))
+    model.load_state_dict(torch.load('model_xavier.pth', map_location=device))
     model.eval()
     u_pred, v_pred, p_pred, f_u_pred, f_v_pred = model(x_star, y_star, t_star)
     u_pred = u_pred.detach()
@@ -149,7 +149,7 @@ if predict:
 
     # Then for the noisy  model with 1% noise
     print("\n First run of the 1% noise added model")
-    model.load_state_dict(torch.load('model_noisy.pth', map_location=device))
+    model.load_state_dict(torch.load('model_noisy_xavier_01.pth', map_location=device))
     model.eval()
     # only retreive lambda values
     lambda_1_value_noisy = model.lambda_1.item()
@@ -164,22 +164,6 @@ if predict:
     # save the results
     np.savetxt('error_lambda_1_noisy.txt', np.array([error_lambda_1]))
     np.savetxt('error_lambda_2_noisy.txt', np.array([error_lambda_2]))
-
-    # Then for the second noisy  model with 1% noise
-    print("\n Second run of the 1% noise added model")
-    model.load_state_dict(torch.load('model_noisy_01.pth', map_location=device))
-    
-    model.eval()
-    # only retreive lambda values
-    lambda_1_value_noisy_01 = model.lambda_1.item()
-    lambda_2_value_noisy_01 = model.lambda_2.item()
-    error_lambda_1 = abs(lambda_1_value_noisy_01 - 1.0) * 100
-    error_lambda_2 = abs(lambda_2_value_noisy_01 - 0.01) / 0.01 * 100
-    # The estimated lambda values is
-    print("\n The estimated lambda values are")
-    print(lambda_1_value_noisy_01, lambda_2_value_noisy_01)
-    print(f'Error lambda_1: {error_lambda_1:e}')
-    print(f'Error lambda_2: {error_lambda_2:e}')
 
     # Then for the noisy  model with 5% noise
     print("\n First run of the 5% noise added model")
@@ -272,7 +256,7 @@ if predict:
             v_star = U_star[:, 1, snap].unsqueeze(1).to(device)
             p_star = P_star[:, snap].unsqueeze(1).to(device)
 
-            model.load_state_dict(torch.load('model.pth', map_location=device))
+            model.load_state_dict(torch.load('model_xavier.pth', map_location=device))
             model.eval()
 
             u_pred, v_pred, p_pred, f_u_pred, f_v_pred = model(x_star, y_star, t_star)
