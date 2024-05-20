@@ -104,12 +104,48 @@ if predict:
 
     error_lambda_1 = abs(lambda_1_value - 1.0) * 100
     error_lambda_2 = abs(lambda_2_value - 0.01) / 0.01 * 100
+    
+
 
     print(f'Error u: {error_u:e}')
     print(f'Error v: {error_v:e}')
     print(f'Error p: {error_p:e}')
     print(f'Error lambda_1: {error_lambda_1:e}')
     print(f'Error lambda_2: {error_lambda_2:e}')
+    
+    # Then for the third run of the no noise model
+    # This one is initialized with the Xavier initialization
+    print("\n Third run of the no noise model and Xavier initialization")
+    model.load_state_dict(torch.load('model3.pth', map_location=device))
+    model.eval()
+    u_pred, v_pred, p_pred, f_u_pred, f_v_pred = model(x_star, y_star, t_star)
+    u_pred = u_pred.detach()
+    v_pred = v_pred.detach()
+    p_pred = p_pred.detach()
+    f_u_pred = f_u_pred.detach()
+    f_v_pred = f_v_pred.detach()
+    
+    # Compute the error with 2 norm
+    error_u = (u_star - u_pred).norm(2) / u_star.norm(2)    
+    error_v = (v_star - v_pred).norm(2) / v_star.norm(2)
+    error_p = (p_star - p_pred).norm(2) / p_star.norm(2)
+    
+    # Retrieve the lambda values
+    lambda_1_value = model.lambda_1.item()
+    lambda_2_value = model.lambda_2.item()
+    print("\n The estimated lambda values are")
+    print(lambda_1_value, lambda_2_value)
+    
+    error_lambda_1 = abs(lambda_1_value - 1.0) * 100
+    error_lambda_2 = abs(lambda_2_value - 0.01) / 0.01 * 100
+
+    print(f'Error u: {error_u:e}')
+    print(f'Error v: {error_v:e}')
+    print(f'Error p: {error_p:e}')
+    print(f'Error lambda_1: {error_lambda_1:e}')
+    print(f'Error lambda_2: {error_lambda_2:e}')
+    
+    
 
     # Then for the noisy  model with 1% noise
     print("\n First run of the 1% noise added model")
@@ -224,7 +260,7 @@ if predict:
     PP_stars = np.zeros((nn, nn, T))
     P_exacts = np.zeros((nn, nn, T))
     print(T)
-    predict = True
+    predict = False
     if predict:
         for snap in range(T):
             print(snap)
