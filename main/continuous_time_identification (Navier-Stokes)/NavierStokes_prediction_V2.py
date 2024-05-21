@@ -5,6 +5,8 @@ import time
 import scipy.io
 from NavierStokes_Pytorch_V1 import PhysicsInformedNN
 from scipy.interpolate import griddata
+import pandas as pd
+
 # Load the data 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
@@ -20,7 +22,6 @@ X_star = torch.tensor(data['X_star'], dtype=torch.float32).to(device)
 # Flatten and prepare data
 N = X_star.shape[0]
 T = t_star.shape[0]
-print(N,T)
 XX = X_star[:, 0:1].repeat(1, T) # dimensions are N x T
 YY = X_star[:, 1:2].repeat(1, T) # dimensions are N x T
 TT = t_star.repeat(1,N).T # dimensions are N x T
@@ -33,8 +34,8 @@ t = TT.flatten()[:, None]
 u = U_star[:, 0, :].flatten()[:, None]
 v = U_star[:, 1, :].flatten()[:, None]
     
-predict = True
-if predict:
+Evaluate_models = True
+if Evaluate_models:
     snap = 100
     x_star = XX[:, snap].unsqueeze(-1).requires_grad_(True).to(device)
     y_star = YY[:, snap].unsqueeze(-1).requires_grad_(True).to(device)
@@ -64,6 +65,7 @@ if predict:
     # Retrieve the lambda values
     lambda_1_value = model.lambda_1.item()
     lambda_2_value = model.lambda_2.item()
+    
     print("\n The estimated lambda values are")
     print(lambda_1_value, lambda_2_value)
     
@@ -97,7 +99,7 @@ if predict:
 
     # Then for the noisy  model with 5% noise
     print("\n  5% noise added model")
-    model.load_state_dict(torch.load('model_noisy_05.pth', map_location=device))
+    model.load_state_dict(torch.load('model_noisy_xavier_05.pth', map_location=device))
     model.eval()
     # only retreive lambda values
     lambda_1_value_noisy_05 = model.lambda_1.item()
@@ -112,7 +114,7 @@ if predict:
 
     # Then for the first run of the noisy  model with 10% noise
     print("\n 10% noise added model")
-    model.load_state_dict(torch.load('model_noisy_10.pth', map_location=device
+    model.load_state_dict(torch.load('model_noisy_xavier_10.pth', map_location=device
     ))
     model.eval()
     # only retreive lambda values
@@ -152,15 +154,36 @@ if predict:
     PP_star = griddata(X_star, p_pred.flatten(), (X, Y), method='cubic')
     P_exact = griddata(X_star, p_star.flatten(), (X, Y), method='cubic')
     
+    
+    # Generate a pandas table for the results
+    # Assuming the predicted lambda values and their errors are already calculated
+    lambda_values = {
+        'Model': ['No noise', '1% noise', '5% noise', '10% noise'],
+        'Lambda_1': [lambda_1_value, lambda_1_value_noisy, lambda_1_value_noisy_05, lambda_1_value_noisy_10],
+        'Lambda_2': [lambda_2_value, lambda_2_value_noisy, lambda_2_value_noisy_05, lambda_2_value_noisy_10],
+        'Error_Lambda_1 (%)': [abs(lambda_1_value - 1.0) * 100, abs(lambda_1_value_noisy - 1.0) * 100, abs(lambda_1_value_noisy_05 - 1.0) * 100, abs(lambda_1_value_noisy_10 - 1.0) * 100],
+        'Error_Lambda_2 (%)': [abs(lambda_2_value - 0.01) / 0.01 * 100, abs(lambda_2_value_noisy - 0.01) / 0.01 * 100, abs(lambda_2_value_noisy_05 - 0.01) / 0.01 * 100, abs(lambda_2_value_noisy_10 - 0.01) / 0.01 * 100]
+    }
+    # Create a DataFrame
+    df_lambda = pd.DataFrame(lambda_values)
+
+    # Display the DataFrame
+    print(df_lambda)
+
+    # Save the DataFrame to a CSV file
+    df_lambda.to_csv('lambda_values_errors.csv', index=False)
+
+
+    
     # Predict on all of time available to make a animation of the predicted plot 
     # Preallocate the array for storing the results
     UU_stars = np.zeros((nn, nn, T))
     VV_stars = np.zeros((nn, nn, T))
     PP_stars = np.zeros((nn, nn, T))
     P_exacts = np.zeros((nn, nn, T))
-    print(T)
-    predict = True
-    if predict:
+    
+    predict_all_time = False
+    if predict_all_time:
         for snap in range(T):
             print(snap)
             x_star = XX[:, snap].unsqueeze(-1).requires_grad_(True).to(device)
