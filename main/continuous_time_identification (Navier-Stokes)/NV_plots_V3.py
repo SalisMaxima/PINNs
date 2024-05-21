@@ -276,3 +276,41 @@ def plot_vorticity_and_training_data(data_path, vorticity_path, lambda_values,X,
 
     # Save figure
     savefig('./figures/NavierStokes_prediction')
+    
+    
+    # Make a figure with only the tabel
+    
+    fig, ax = newfig(1.015, 0.8)
+    ax.axis('off')
+    s = r'$\begin{tabular}{|c|c|}';
+    s = s + r' \hline'
+    s = s + r' Correct PDE & $\begin{array}{c}'
+    s = s + r' u_t + (u u_x + v u_y) = -p_x + 0.01 (u_{xx} + u_{yy})\\'
+    s = s + r' v_t + (u v_x + v v_y) = -p_y + 0.01 (v_{xx} + v_{yy})'
+    s = s + r' \end{array}$ \\ '
+    s = s + r' \hline'
+    s = s + r' Identified PDE (clean data) & $\begin{array}{c}'
+    s = s + r' u_t + %.3f (u u_x + v u_y) = -p_x + %.5f (u_{xx} + u_{yy})' % (lambda_values['No noise']['lambda_1'], lambda_values['No noise']['lambda_2'])
+    s = s + r' \\'
+    s = s + r' v_t + %.3f (u v_x + v v_y) = -p_y + %.5f (v_{xx} + v_{yy})' % (lambda_values['No noise']['lambda_1'], lambda_values['No noise']['lambda_2'])
+    s = s + r' \end{array}$ \\ '
+    s = s + r' \hline'
+    s = s + r' Identified PDE (1\% noise) & $\begin{array}{c}'
+    s = s + r' u_t + %.3f (u u_x + v u_y) = -p_x + %.5f (u_{xx} + u_{yy})' % (lambda_values['1% noise']['lambda_1'], lambda_values['1% noise']['lambda_2'])
+    s = s + r' \\'
+    s = s + r' v_t + %.3f (u v_x + v v_y) = -p_y + %.5f (v_{xx} + v_{yy})' % (lambda_values['1% noise']['lambda_1'], lambda_values['1% noise']['lambda_2'])
+    s = s + r' \end{array}$ \\ '
+    s = s + r' \hline'
+    s = s + r' Identified PDE (5\% noise) & $\begin{array}{c}'
+    s = s + r' u_t + %.3f (u u_x + v u_y) = -p_x + %.5f (u_{xx} + u_{yy})' % (lambda_values['5% noise']['lambda_1'], lambda_values['5% noise']['lambda_2'])
+    s = s + r' \\'  
+    s = s + r' v_t + %.3f (u v_x + v v_y) = -p_y + %.5f (v_{xx} + v_{yy})' % (lambda_values['5% noise']['lambda_1'], lambda_values['5% noise']['lambda_2'])
+    s = s + r' \end{array}$ \\ '
+    s = s + r' \hline'
+    s = s + r' \end{tabular}$'
+
+    ax.text(0.015, 0.0, s)
+
+    # Save figure
+    savefig('./figures/NavierStokes_prediction_table')
+    
