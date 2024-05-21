@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.gridspec as gridspec
 from plotting import newfig, savefig
-from NavierStokes_prediction import *
+from NavierStokes_prediction_V2 import *
 from itertools import product, combinations
 from mpl_toolkits.mplot3d import Axes3D
 
