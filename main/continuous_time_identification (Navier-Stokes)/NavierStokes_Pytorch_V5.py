@@ -152,7 +152,7 @@ def train_pinn(data_path, layers, epochs=200000, batch_size=5000, lr=0.001, nois
 
     # Initialize the model and optimizer
     model = PhysicsInformedNN(layers).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
     
     # Select a random batch of training data
     N_train = batch_size
@@ -218,5 +218,5 @@ def train_pinn(data_path, layers, epochs=200000, batch_size=5000, lr=0.001, nois
 if __name__ == "__main__":
     layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
     data_path = '../Data/cylinder_nektar_wake.mat'
-    save_path = "model_xavier_loss_curve.pth"
+    save_path = "model_AdamW_loss_curve.pth"
     train_pinn(data_path, layers, epochs=200000, batch_size=5000, lr=0.001, noise_level=0, save_path=save_path, track_loss=True)
