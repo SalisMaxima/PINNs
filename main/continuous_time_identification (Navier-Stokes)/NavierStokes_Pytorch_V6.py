@@ -153,7 +153,7 @@ def train_pinn(data_path, layers, epochs=200000, batch_size=5000, lr=0.001, nois
     u_val.requires_grad_(True)
     v_val.requires_grad_(True)
 
-    start_time = time.time()
+    start_time = time.time() # Track time for training
     model.train()
 
     if track_loss:
