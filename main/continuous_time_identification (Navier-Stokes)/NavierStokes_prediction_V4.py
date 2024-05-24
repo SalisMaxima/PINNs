@@ -9,7 +9,7 @@ from NV_plots_V3 import plot_vorticity_and_training_data
 def evaluate_models(data_path, vorticity_path, models_paths, layers, produce_table=False, prepare_for_animations=False, prepare_for_plots=False, evaluate_models=True):
     """
     Evaluate multiple models for predicting the Navier-Stokes equations.
-
+‰
     Args:
     - data_path (str): Path to the .mat file containing the data.
     - vorticity_path (str): Path to the .mat file containing the vorticity data.
