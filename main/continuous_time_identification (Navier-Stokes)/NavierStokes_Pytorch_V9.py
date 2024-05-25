@@ -1,3 +1,17 @@
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.init as init
+import scipy.io
+import matplotlib.pyplot as plt
+from torch.autograd import grad
+import time
+from sklearn.model_selection import train_test_split
+
+# Set seeds for reproducibility
+np.random.seed(1234)
+torch.manual_seed(1234)
+
 class PhysicsInformedNN(nn.Module):
     def __init__(self, layers, rho1=1.0, rho2=1.0, activation='tanh', dropout_prob=0.0):
         super(PhysicsInformedNN, self).__init__()
@@ -13,10 +27,9 @@ class PhysicsInformedNN(nn.Module):
         for i in range(len(layers) - 1):
             linear_layer = nn.Linear(layers[i], layers[i + 1])
             if i < len(layers) - 2:
-                # Add linear and activation layers to the model
+                # Add linear, activation, and dropout layers to the model
                 self.model.add_module(f"linear_{i}", linear_layer)
                 self.model.add_module(f"{activation}_{i}", activation_function)
-                # Add dropout layer if dropout_prob > 0
                 if dropout_prob > 0.0:
                     self.model.add_module(f"dropout_{i}", nn.Dropout(dropout_prob))
             else:
@@ -85,3 +98,148 @@ class PhysicsInformedNN(nn.Module):
         total_loss = self.rho1 * (mse_u + mse_v) + self.rho2 * (mse_f_u + mse_f_v)
         return total_loss, mse_u, mse_v, mse_f_u, mse_f_v
 
+def train_pinn(data_path, layers, rho1=1.0, rho2=1.0, epochs=200000, batch_size=5000, lr=0.001, noise_level=0.0, save_path="model.pth", track_loss=False, dropout_prob=0.0):
+    # Load the data from the .mat file
+    data = scipy.io.loadmat(data_path)
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        print("Cuda available! Training on GPU.")
+    else:
+        device = torch.device("cpu")
+        print("Training on CPU.")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Extract and process data
+    U_star = torch.tensor(data['U_star'], dtype=torch.float32).to(device)
+    P_star = torch.tensor(data['p_star'], dtype=torch.float32).to(device)
+    t_star = torch.tensor(data['t'], dtype=torch.float32).to(device)
+    X_star = torch.tensor(data['X_star'], dtype=torch.float32).to(device)
+
+    N = X_star.shape[0]
+    T = t_star.shape[0]
+    XX = X_star[:, 0:1].repeat(1, T)
+    YY = X_star[:, 1:2].repeat(1, T)
+    TT = t_star.repeat(1, N).T
+
+    x = XX.flatten()[:, None]
+    y = YY.flatten()[:, None]
+    t = TT.flatten()[:, None]
+    u = U_star[:, 0, :].flatten()[:, None]
+    v = U_star[:, 1, :].flatten()[:, None]
+
+    # Select a random batch of training data
+    N_train = batch_size
+    idx = np.random.choice(N * T, N_train, replace=False)
+    x_train, x_val = train_test_split(x[idx, :], test_size=0.2, random_state=1234)
+    y_train, y_val = train_test_split(y[idx, :], test_size=0.2, random_state=1234)
+    t_train, t_val = train_test_split(t[idx, :], test_size=0.2, random_state=1234)
+    u_train, u_val = train_test_split(u[idx, :], test_size=0.2, random_state=1234)
+    v_train, v_val = train_test_split(v[idx, :], test_size=0.2, random_state=1234)
+
+    # Initialize the model and optimizer
+    model = PhysicsInformedNN(layers, rho1=rho1, rho2=rho2, dropout_prob=dropout_prob).to(device)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+    
+    # Add noise to the training data if specified
+    if noise_level > 0:
+        u_train += noise_level * torch.std(u_train) * torch.randn_like(u_train)
+        v_train += noise_level * torch.std(v_train) * torch.randn_like(v_train)
+        print("Training data with noise added successfully!")
+
+    # Require gradients for the training and validation data
+    x_train.requires_grad_(True)
+    y_train.requires_grad_(True)
+    t_train.requires_grad_(True)
+    u_train.requires_grad_(True)
+    v_train.requires_grad_(True)
+
+    x_val.requires_grad_(True)
+    y_val.requires_grad_(True)
+    t_val.requires_grad_(True)
+    u_val.requires_grad_(True)
+    v_val.requires_grad_(True)
+
+    start_time = time.time() # Track time for training
+    model.train()
+
+    if track_loss:
+        train_loss_history = []
+        val_loss_history = []
+        mse_u_history = []
+        mse_v_history = []
+        mse_f_u_history = []
+        mse_f_v_history = []
+
+    # Training loop
+    for epoch in range(epochs):
+        # Training step
+        optimizer.zero_grad()
+        u_pred, v_pred, p_pred, f_u_pred, f_v_pred = model(x_train, y_train, t_train)
+        loss, mse_u, mse_v, mse_f_u, mse_f_v = model.loss_function(u_train, v_train, (u_pred, v_pred, p_pred, f_u_pred, f_v_pred))
+        loss.backward()
+        optimizer.step()
+
+        if track_loss:
+            # Validation step
+            model.eval()
+            u_val_pred, v_val_pred, p_val_pred, f_u_val_pred, f_v_val_pred = model(x_val, y_val, t_val)
+            val_loss, val_mse_u, val_mse_v, val_mse_f_u, val_mse_f_v = model.loss_function(u_val, v_val, (u_val_pred, v_val_pred, p_val_pred, f_u_val_pred, f_v_val_pred))
+            model.train()
+            train_loss_history.append(loss.item())
+            val_loss_history.append(val_loss.item())
+            mse_u_history.append(mse_u.item())
+            mse_v_history.append(mse_v.item())
+            mse_f_u_history.append(mse_f_u.item())
+            mse_f_v_history.append(mse_f_v.item())
+
+        if epoch % 100 == 0:
+            print(f"Epoch {epoch}: Train Loss = {loss.item()}, Val Loss = {val_loss.item()}")
+        if epoch % 1000 == 0:  # Save the model every 1000 epochs
+            torch.save(model.state_dict(), save_path)
+            print(f"Model saved at epoch {epoch}")
+    
+    end_time = time.time()
+    print(f"Training time: {end_time - start_time} seconds")
+    torch.save(model.state_dict(), save_path)
+    print("Model saved successfully!")
+
+    # Plot and save the loss curve if tracking loss
+    if track_loss:
+        plt.figure(figsize=(10, 5))
+        plt.semilogy(range(epochs), train_loss_history, label="Training Loss")
+        plt.semilogy(range(epochs), val_loss_history, label="Validation Loss", linestyle='--')
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+        plt.title("Training and Validation Loss Over Epochs")
+        plt.legend()
+        plt.grid(True)
+        loss_curve_name = f"Loss_curve_{save_path.split('.')[0]}.png"
+        plt.savefig(loss_curve_name)
+        plt.show()
+        print(f"Loss curve saved successfully as {loss_curve_name}!")
+
+        # Plot and save the individual loss curves
+        plt.figure(figsize=(10, 5))
+        plt.semilogy(range(epochs), mse_u_history, label="MSE U")
+        plt.semilogy(range(epochs), mse_v_history, label="MSE V")
+        plt.semilogy(range(epochs), mse_f_u_history, label="MSE f_u")
+        plt.semilogy(range(epochs), mse_f_v_history, label="MSE f_v")
+        plt.xlabel("Epochs")
+        plt.ylabel("MSE Loss")
+        plt.title("Individual MSE Losses Over Epochs")
+        plt.legend()
+        plt.grid(True)
+        mse_loss_curve_name = f"MSE_Loss_curve_{save_path.split('.')[0]}.png"
+        plt.savefig(mse_loss_curve_name)
+        plt.show()
+        print(f"Individual MSE loss curves saved successfully as {mse_loss_curve_name}!")
+
+# Example usage
+if __name__ == "__main__":
+    layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
+    data_path = '../Data/cylinder_nektar_wake.mat'
+    save_path = "model_with_dropout.pth"
+    rho1 = 1.0  # Set your rho1 value here
+    rho2 = 1.0  # Set your rho2 value here
+    dropout_prob = 0.2  # Set your dropout probability here
+    train_pinn(data_path, layers, rho1=rho1, rho2=rho2, epochs=200000, batch_size=5000, lr=0.001, noise_level=0, save_path=save_path, track_loss=True, dropout_prob=dropout_prob)

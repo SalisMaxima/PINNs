@@ -204,8 +204,8 @@ def train_pinn(data_path, layers, rho1=1.0, rho2=1.0, epochs=200000, batch_size=
     # Plot and save the loss curve if tracking loss
     if track_loss:
         plt.figure(figsize=(10, 5))
-        plt.plot(range(epochs), train_loss_history, label="Training Loss")
-        plt.plot(range(epochs), val_loss_history, label="Validation Loss", linestyle='--')
+        plt.semilogy(range(epochs), train_loss_history, label="Training Loss")
+        plt.semilogy(range(epochs), val_loss_history, label="Validation Loss", linestyle='--')
         plt.xlabel("Epochs")
         plt.ylabel("Loss")
         plt.title("Training and Validation Loss Over Epochs")
@@ -218,10 +218,10 @@ def train_pinn(data_path, layers, rho1=1.0, rho2=1.0, epochs=200000, batch_size=
 
         # Plot and save the individual loss curves
         plt.figure(figsize=(10, 5))
-        plt.plot(range(epochs), mse_u_history, label="MSE U")
-        plt.plot(range(epochs), mse_v_history, label="MSE V")
-        plt.plot(range(epochs), mse_f_u_history, label="MSE f_u")
-        plt.plot(range(epochs), mse_f_v_history, label="MSE f_v")
+        plt.semilogy(range(epochs), mse_u_history, label="MSE U")
+        plt.semilogy(range(epochs), mse_v_history, label="MSE V")
+        plt.semilogy(range(epochs), mse_f_u_history, label="MSE f_u")
+        plt.semilogy(range(epochs), mse_f_v_history, label="MSE f_v")
         plt.xlabel("Epochs")
         plt.ylabel("MSE Loss")
         plt.title("Individual MSE Losses Over Epochs")
