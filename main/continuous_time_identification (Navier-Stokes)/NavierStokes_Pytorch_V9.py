@@ -241,5 +241,5 @@ if __name__ == "__main__":
     save_path = "model_with_dropout.pth"
     rho1 = 1.0  # Set your rho1 value here
     rho2 = 1.0  # Set your rho2 value here
-    dropout_prob = 0.2  # Set your dropout probability here
+    dropout_prob = 0  # Set your dropout probability here
     train_pinn(data_path, layers, rho1=rho1, rho2=rho2, epochs=200000, batch_size=5000, lr=0.001, noise_level=0, save_path=save_path, track_loss=True, dropout_prob=dropout_prob)
