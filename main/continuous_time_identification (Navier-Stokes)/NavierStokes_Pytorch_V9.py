@@ -6,7 +6,9 @@ import scipy.io
 import matplotlib.pyplot as plt
 from torch.autograd import grad
 import time
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split 
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes    
 
 # Set seeds for reproducibility
 np.random.seed(1234)
@@ -205,9 +207,12 @@ def train_pinn(data_path, layers, rho1=1.0, rho2=1.0, epochs=200000, batch_size=
 
     # Plot and save the loss curve if tracking loss
     if track_loss:
+       # Plot and save the training and validation loss curves
+        lw = 0.2
+        msz = 0.05
         plt.figure(figsize=(10, 5))
-        plt.semilogy(range(epochs), train_loss_history, label="Training Loss")
-        plt.semilogy(range(epochs), val_loss_history, label="Validation Loss", linestyle='--')
+        plt.semilogy(range(epochs), train_loss_history, label="Training Loss", linestyle='-', color='blue', linewidth=lw+0.2, markersize=msz)
+        plt.semilogy(range(epochs), val_loss_history, label="Validation Loss", linestyle='--', color='orange', linewidth=lw + 0.2, markersize=msz)
         plt.xlabel("Epochs")
         plt.ylabel("Loss")
         plt.title("Training and Validation Loss Over Epochs")
@@ -220,10 +225,11 @@ def train_pinn(data_path, layers, rho1=1.0, rho2=1.0, epochs=200000, batch_size=
 
         # Plot and save the individual loss curves
         plt.figure(figsize=(10, 5))
-        plt.semilogy(range(epochs), mse_u_history, label="MSE U")
-        plt.semilogy(range(epochs), mse_v_history, label="MSE V")
-        plt.semilogy(range(epochs), mse_f_u_history, label="MSE f_u")
-        plt.semilogy(range(epochs), mse_f_v_history, label="MSE f_v")
+        
+        plt.semilogy(range(epochs), mse_u_history, label="MSE U", linestyle='-', marker='o', color='red', linewidth=lw, markersize=msz)
+        plt.semilogy(range(epochs), mse_v_history, label="MSE V", linestyle='--', marker='s', color='green', linewidth=lw, markersize=msz)
+        plt.semilogy(range(epochs), mse_f_u_history, label="MSE f_u", linestyle='-.', marker='^', color='blue', linewidth=lw, markersize=msz)
+        plt.semilogy(range(epochs), mse_f_v_history, label="MSE f_v", linestyle=':', marker='x', color='purple', linewidth=lw, markersize=msz)
         plt.xlabel("Epochs")
         plt.ylabel("MSE Loss")
         plt.title("Individual MSE Losses Over Epochs")
@@ -234,6 +240,8 @@ def train_pinn(data_path, layers, rho1=1.0, rho2=1.0, epochs=200000, batch_size=
         plt.show()
         print(f"Individual MSE loss curves saved successfully as {mse_loss_curve_name}!")
 
+
+
 # Example usage
 if __name__ == "__main__":
     layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
@@ -242,4 +250,4 @@ if __name__ == "__main__":
     rho1 = 1.0  # Set your rho1 value here
     rho2 = 1.0  # Set your rho2 value here
     dropout_prob = 0  # Set your dropout probability here
-    train_pinn(data_path, layers, rho1=rho1, rho2=rho2, epochs=200000, batch_size=5000, lr=0.001, noise_level=0, save_path=save_path, track_loss=True, dropout_prob=dropout_prob)
+    train_pinn(data_path, layers, rho1=rho1, rho2=rho2, epochs=2000, batch_size=5000, lr=0.001, noise_level=0, save_path=save_path, track_loss=True, dropout_prob=dropout_prob)
