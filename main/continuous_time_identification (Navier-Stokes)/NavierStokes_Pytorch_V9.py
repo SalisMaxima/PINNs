@@ -233,13 +233,15 @@ def train_pinn(data_path, layers, rho1=1.0, rho2=1.0, epochs=200000, batch_size=
         plt.savefig(mse_loss_curve_name)
         plt.show()
         print(f"Individual MSE loss curves saved successfully as {mse_loss_curve_name}!")
+    return model,train_loss_history,val_loss_history,mse_u_history,mse_v_history,mse_f_u_history,mse_f_v_history
 
 # Example usage
 if __name__ == "__main__":
     layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
     data_path = '../Data/cylinder_nektar_wake.mat'
-    save_path = "model_with_dropout.pth"
+    save_path = "model_Loss_curve_data.pth"
     rho1 = 1.0  # Set your rho1 value here
     rho2 = 1.0  # Set your rho2 value here
     dropout_prob = 0  # Set your dropout probability here
-    train_pinn(data_path, layers, rho1=rho1, rho2=rho2, epochs=200000, batch_size=5000, lr=0.001, noise_level=0, save_path=save_path, track_loss=True, dropout_prob=dropout_prob)
+    model,train_loss_history,val_loss_history,mse_u_history,mse_v_history,mse_f_u_history,mse_f_v_history = train_pinn(data_path, layers, rho1=rho1, rho2=rho2, epochs=200000, batch_size=5000, lr=0.001, noise_level=0, save_path=save_path, track_loss=True, dropout_prob=dropout_prob)
+    
