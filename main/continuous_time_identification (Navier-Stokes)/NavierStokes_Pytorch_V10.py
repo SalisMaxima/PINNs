@@ -229,7 +229,39 @@ def train_pinn(data_path, layers, rho1=1.0, rho2=1.0, epochs=200000, batch_size=
     # Plot and save the loss curve if tracking loss
     if track_loss:
         plot_interactive_loss_curves(train_loss_history, val_loss_history, mse_u_history, mse_v_history, mse_f_u_history, mse_f_v_history, epochs, save_path)
+        # Plot and save the training and validation loss curves
+        lw = 0.1
+        msz = 0.01
+        plt.figure(figsize=(10, 5))
+        plt.semilogy(range(epochs), train_loss_history, label="Training Loss", linestyle='-', color='blue', linewidth=lw+0.2, markersize=msz)
+        plt.semilogy(range(epochs), val_loss_history, label="Validation Loss", linestyle='--', color='orange', linewidth=lw + 0.2, markersize=msz)
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+        plt.title("Training and Validation Loss Over Epochs")
+        plt.legend()
+        plt.grid(True)
+        loss_curve_name = f"Loss_curve_{save_path.split('.')[0]}.png"
+        plt.savefig(loss_curve_name)
+        plt.show()
+        print(f"Loss curve saved successfully as {loss_curve_name}!")
 
+        # Plot and save the individual loss curves
+        plt.figure(figsize=(10, 5))
+        
+        plt.semilogy(range(epochs), mse_u_history, label="MSE U", linestyle='-', marker='o', color='red', linewidth=lw, markersize=msz)
+        plt.semilogy(range(epochs), mse_v_history, label="MSE V", linestyle='--', marker='s', color='green', linewidth=lw, markersize=msz)
+        plt.semilogy(range(epochs), mse_f_u_history, label="MSE f_u", linestyle='-.', marker='^', color='blue', linewidth=lw, markersize=msz)
+        plt.semilogy(range(epochs), mse_f_v_history, label="MSE f_v", linestyle=':', marker='x', color='purple', linewidth=lw, markersize=msz)
+        plt.xlabel("Epochs")
+        plt.ylabel("MSE Loss")
+        plt.title("Individual MSE Losses Over Epochs")
+        plt.legend()
+        plt.grid(True)
+        mse_loss_curve_name = f"MSE_Loss_curve_{save_path.split('.')[0]}.png"
+        plt.savefig(mse_loss_curve_name)
+        plt.show()
+        print(f"Individual MSE loss curves saved successfully as {mse_loss_curve_name}!")
+    return model, train_loss_history, val_loss_history, mse_u_history, mse_v_history, mse_f_u_history, mse_f_v_history
 # Example usage
 if __name__ == "__main__":
     layers = [3, 20, 20, 20, 20, 20, 20, 20, 20, 2]
@@ -238,4 +270,4 @@ if __name__ == "__main__":
     rho1 = 1.0  # Set your rho1 value here
     rho2 = 1.0  # Set your rho2 value here
     dropout_prob = 0  # Set your dropout probability here
-    train_pinn(data_path, layers, rho1=rho1, rho2=rho2, epochs=20000, batch_size=5000, lr=0.001, noise_level=0, save_path=save_path, track_loss=True, dropout_prob=dropout_prob)
+    model, train_loss_history, val_loss_history, mse_u_history, mse_v_history, mse_f_u_history, mse_f_v_history = train_pinn(data_path, layers, rho1=rho1, rho2=rho2, epochs=200000, batch_size=5000, lr=0.001, noise_level=0, save_path=save_path, track_loss=True, dropout_prob=dropout_prob)
